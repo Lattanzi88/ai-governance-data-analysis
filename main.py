@@ -16,6 +16,26 @@ dati = {
 
 df = pd.DataFrame(dati)
 
+numero_candidati = len(df)
+
+if numero_candidati < 30:
+    print("ATTENZIONE: dataset molto piccolo.")
+    print("I risultati sono soltanto esplorativi.")
+else:
+    print("Dataset sufficientemente ampio per proseguire l'analisi.")
+
+conteggio_genere = df["genere"].value_counts()
+
+print("\n--- CANDIDATI PER GENERE ---")
+print(conteggio_genere)
+
+
+selezionati_per_genere = (df[df["selezionato"] == 1]["genere"].value_counts())
+
+print("\n--- SELEZIONATI PER GENERE ---")
+print(selezionati_per_genere)
+
+
 # ==========================================
 # 2. PREPARAZIONE E ANALISI DEI DATI
 # ==========================================
@@ -77,6 +97,22 @@ percentuale_selezione_maschi = (len(genere_maschio_selezionati)/ len(genere_masc
 
 differenza_selezione_genere = abs(percentuale_selezione_femmine - percentuale_selezione_maschi)
 
+tasso_minimo = min(percentuale_selezione_femmine,percentuale_selezione_maschi)
+
+tasso_massimo = max(percentuale_selezione_femmine,percentuale_selezione_maschi)
+
+if tasso_massimo == 0:
+    selection_rate_ratio_genere = None
+else:
+    selection_rate_ratio_genere = tasso_minimo / tasso_massimo
+
+
+if selection_rate_ratio_genere is None:
+    interpretazione_ratio = "Rapporto non definibile"
+elif selection_rate_ratio_genere < 0.8:
+    interpretazione_ratio = "Differenza da approfondire"
+else:
+    interpretazione_ratio = "Rapporto pari o superiore a 0.8"
 
 # --- Tassi per titolo di studio ---
 
@@ -107,6 +143,8 @@ riepilogo = {
         "tasso_maschi": percentuale_selezione_maschi,
         "tasso_femmine": percentuale_selezione_femmine,
         "differenza_genere": differenza_selezione_genere,
+        "selection_rate_ratio": selection_rate_ratio_genere,
+        "interpretazione_ratio": interpretazione_ratio,
     },
 
     "titolo_studio": {
@@ -124,13 +162,24 @@ riepilogo = {
 
 for categoria, indicatori in riepilogo.items():
     print(f"\n--- {categoria.upper()} ---")
-    
+
     for nome, valore in indicatori.items():
-        if "differenza" in nome:
+        if valore is None:
+            print(f"{nome}: non definito")
+        elif isinstance(valore, str):
+            print(f"{nome}: {valore}")
+        elif "differenza" in nome:
             print(f"{nome}: {valore:.2f} punti percentuali")
+        elif "ratio" in nome:
+            print(f"{nome}: {valore:.2f}")
         else:
             print(f"{nome}: {valore:.2f}%")
     
+print("\n--- NOTA METODOLOGICA ---")
+print("Il Selection Rate Ratio è un indicatore descrittivo.")
+print("Un valore basso segnala una disparità da approfondire,")
+print("ma non dimostra da solo una discriminazione.")
+print("I risultati dipendono dalla dimensione e dalla qualità del dataset.")
 
 # ==========================================
 # 5. VISUALIZZAZIONE DEI RISULTATI
